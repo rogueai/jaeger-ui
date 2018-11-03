@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 // Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,6 +72,46 @@ function getJSON(url, options = {}) {
   });
 }
 
+function transformLogs(span) {
+  return !span.annotations ? [] : span.annotations.map(annotation => {
+    const value = annotation.value;
+    let fieldsValue = value;
+    const regex = /(\s?((\S+)=))/gi;
+    let match = regex.exec(value);
+    while (match != null) {
+      const key = match[3];
+      fieldsValue = fieldsValue.replace(match[0], `__$key$__${key}=`);
+      match = regex.exec(value);
+    }
+    const fields = fieldsValue.split('__$key$__').slice(1).map(prop => {
+      const t = prop.split('=');
+      return {
+        key: t[0],
+        value: t[1],
+      };
+    });
+    return {
+      timestamp: annotation.timestamp,
+      fields,
+    };
+  });
+}
+
+function transformTags(span) {
+  return !span.tags ? [] : Object.entries(span.tags).map(tag => ({
+    key: tag[0],
+    value: tag[1],
+  }));
+}
+
+function transformReferences(span) {
+  return !span.parentId ? [] : [{
+    refType: span.kind === 'CONSUMER' ? 'FOLLOWS_FROM' : 'CHILD_OF',
+    traceID: span.traceId,
+    spanID: span.parentId,
+  }];
+}
+
 function transformTraceData(trace) {
   const traceData = {
     traceID: trace[0].traceId,
@@ -82,37 +123,9 @@ function transformTraceData(trace) {
     operationName: span.name,
     startTime: span.timestamp,
     duration: span.duration,
-    logs: !span.annotations ? [] : span.annotations.map(annotation => {
-      const value = annotation.value;
-      let fieldsValue = value;
-      const regex = /(\s?((\S+)=))/gi;
-      let match = regex.exec(value);
-      while (match != null) {
-        const key = match[3];
-        fieldsValue = fieldsValue.replace(match[0], `__$key$__${key}=`);
-        match = regex.exec(value);
-      }
-      const fields = fieldsValue.split('__$key$__').slice(1).map(prop => {
-        const t = prop.split('=');
-        return {
-          key: t[0],
-          value: t[1],
-        };
-      });
-      return {
-        timestamp: annotation.timestamp,
-        fields,
-      };
-    }),
-    tags: !span.tags ? [] : Object.entries(span.tags).map(tag => ({
-      key: tag[0],
-      value: tag[1],
-    })),
-    references: !span.parentId ? [] : [{
-      refType: 'CHILD_OF',
-      traceID: span.traceId,
-      spanID: span.parentId,
-    }],
+    logs: transformLogs(span),
+    tags: transformTags(span),
+    references: transformReferences(span),
   }));
   traceData.processes = {};
   trace.forEach(span => {
@@ -166,9 +179,7 @@ const JaegerAPI = {
     }));
   },
   fetchTraces(ids) {
-    const traces = ids.traceID.map(id => {
-      return getJSON(`${this.apiRoot}trace/${id}`).then(d => transformTraceData(d));
-    });
+    const traces = ids.traceID.map(id => getJSON(`${this.apiRoot}trace/${id}`).then(d => transformTraceData(d)));
     return Promise.all(traces).then(result => ({ 'data': result }));
   },
   archiveTrace(id) {
