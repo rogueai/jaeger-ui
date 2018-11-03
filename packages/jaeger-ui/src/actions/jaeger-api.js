@@ -23,7 +23,7 @@ export const fetchTrace = createAction(
 
 export const fetchMultipleTraces = createAction(
   '@JAEGER_API/FETCH_MULTIPLE_TRACES',
-  ids => JaegerAPI.searchTraces({ traceID: ids }),
+  ids => JaegerAPI.fetchTraces({ traceID: ids }),
   ids => ({ ids })
 );
 

@@ -15,5 +15,5 @@
 // eslint-disable-next-line import/prefer-default-export
 export function getTraceName(spans) {
   const span = spans.filter(sp => !sp.references || !sp.references.length)[0];
-  return span ? `${span.process.serviceName}: ${span.operationName}` : '';
+  return span ? `${span.process.serviceName}: ${span.operationName} (${span.spanID})` : '';
 }

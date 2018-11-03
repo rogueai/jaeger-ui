@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "proxy": {
     "/api": {
-      "target": "http://localhost:16686",
+      "target": "http://localhost:9412",
       "logLevel": "silent",
       "secure": false,
       "changeOrigin": true,

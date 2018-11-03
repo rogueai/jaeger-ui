@@ -162,6 +162,7 @@ export class SearchFormImpl extends React.PureComponent {
     } = this.props;
     const selectedServicePayload = services.find(s => s.name === selectedService);
     const opsForSvc = (selectedServicePayload && selectedServicePayload.operations) || [];
+    const servicesOpts = services || [];
     const noSelectedService = selectedService === '-' || !selectedService;
     const tz = selectedLookback === 'custom' ? new Date().toTimeString().replace(/^.*?GMT/, 'UTC') : null;
     return (
@@ -180,7 +181,7 @@ export class SearchFormImpl extends React.PureComponent {
             props={{
               disabled,
               clearable: false,
-              options: services.map(v => ({ label: v.name, value: v.name })),
+              options: [{ name: 'all' }].concat(servicesOpts).map(v => ({ label: v.name, value: v.name })),
               required: true,
             }}
           />
@@ -233,7 +234,7 @@ export class SearchFormImpl extends React.PureComponent {
                   </div>
                 }
               >
-                <IoHelp className="SearchForm--hintTrigger" />
+                <IoHelp className="SearchForm--hintTrigger"/>
               </Popover>
             </div>
           }
@@ -274,7 +275,7 @@ export class SearchFormImpl extends React.PureComponent {
                     </h3>
                   }
                 >
-                  <IoHelp className="SearchForm--hintTrigger" />
+                  <IoHelp className="SearchForm--hintTrigger"/>
                 </Popover>
               </div>
             }
@@ -286,7 +287,7 @@ export class SearchFormImpl extends React.PureComponent {
               placeholder="Start Date"
               props={{ disabled }}
             />
-            <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+            <Field name="startDateTime" type="time" component={AdaptedInput} props={{ disabled }}/>
           </FormItem>,
 
           <FormItem
@@ -303,7 +304,7 @@ export class SearchFormImpl extends React.PureComponent {
                     </h3>
                   }
                 >
-                  <IoHelp className="SearchForm--hintTrigger" />
+                  <IoHelp className="SearchForm--hintTrigger"/>
                 </Popover>
               </div>
             }
@@ -315,7 +316,7 @@ export class SearchFormImpl extends React.PureComponent {
               placeholder="End Date"
               props={{ disabled }}
             />
-            <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }} />
+            <Field name="endDateTime" type="time" component={AdaptedInput} props={{ disabled }}/>
           </FormItem>,
         ]}
 
@@ -329,7 +330,7 @@ export class SearchFormImpl extends React.PureComponent {
         </FormItem>
 
         <FormItem label="Max Duration">
-          <Field name="maxDuration" component={AdaptedInput} placeholder="e.g. 1.1s" props={{ disabled }} />
+          <Field name="maxDuration" component={AdaptedInput} placeholder="e.g. 1.1s" props={{ disabled }}/>
         </FormItem>
 
         <FormItem label="Limit Results">
@@ -357,7 +358,7 @@ SearchFormImpl.propTypes = {
     PropTypes.shape({
       name: PropTypes.string,
       operations: PropTypes.arrayOf(PropTypes.string),
-    })
+    }),
   ),
   selectedService: PropTypes.string,
   selectedLookback: PropTypes.string,
@@ -498,5 +499,5 @@ function mapDispatchToProps(dispatch) {
 export default connect(mapStateToProps, mapDispatchToProps)(
   reduxForm({
     form: 'searchSideBar',
-  })(SearchFormImpl)
+  })(SearchFormImpl),
 );

@@ -33,6 +33,7 @@ function fetchTraceStarted(state, { meta }) {
 
 function fetchTraceDone(state, { meta, payload }) {
   const { id } = meta;
+
   const data = transformTraceData(payload.data[0]);
   let trace;
   if (!data) {

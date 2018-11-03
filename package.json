@@ -26,7 +26,6 @@
     "eslint": "eslint 'scripts/*.js' 'packages/*/src/**/*.js' 'packages/*/*.js'",
     "flow": "glow",
     "lint": "yarn run eslint && yarn run prettier && yarn run flow && yarn run check-license",
-    "precommit": "lint-staged",
     "prepare": "lerna run --stream --sort prepublishOnly",
     "prettier":
       "prettier --write '{.,scripts}/*.{js,json,md}' 'packages/*/{src,demo/src}/**/*.{css,js,json,md}' 'packages/*/*.{css,js,json,md}'",

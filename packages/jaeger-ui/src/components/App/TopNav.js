@@ -104,7 +104,7 @@ export function TopNavImpl(props: Props) {
       </Menu>
       <Menu theme="dark" mode="horizontal" selectable={false} selectedKeys={[pathname]}>
         <Menu.Item>
-          <Link to={prefixUrl('/')}>Jaeger UI</Link>
+          <Link to={prefixUrl('/')}>Zipkin UI</Link>
         </Menu.Item>
         <Menu.Item>
           <TraceIDSearchInput />

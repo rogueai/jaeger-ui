@@ -34,7 +34,7 @@ export function getMessageFromError(errData, status) {
 }
 
 function getJSON(url, options = {}) {
-  const { query = null, ...init } = options;
+  const { query, ...init } = options;
   init.credentials = 'same-origin';
   const queryStr = query ? `?${queryString.stringify(query)}` : '';
   return fetch(`${url}${queryStr}`, init).then(response => {
@@ -71,25 +71,142 @@ function getJSON(url, options = {}) {
   });
 }
 
-export const DEFAULT_API_ROOT = prefixUrl('/api/');
+function transformTraceData(trace) {
+  const traceData = {
+    traceID: trace[0].traceId,
+  };
+  traceData.spans = trace.map(span => ({
+    spanID: span.id,
+    traceID: span.traceId,
+    processID: span.localEndpoint.serviceName,
+    operationName: span.name,
+    startTime: span.timestamp,
+    duration: span.duration,
+    logs: !span.annotations ? [] : span.annotations.map(annotation => {
+      const value = annotation.value;
+      let fieldsValue = value;
+      const regex = /(\s?((\S+)=))/gi;
+      let match = regex.exec(value);
+      while (match != null) {
+        const key = match[3];
+        fieldsValue = fieldsValue.replace(match[0], `__$key$__${key}=`);
+        match = regex.exec(value);
+      }
+      const fields = fieldsValue.split('__$key$__').slice(1).map(prop => {
+        const t = prop.split('=');
+        return {
+          key: t[0],
+          value: t[1],
+        };
+      });
+      return {
+        timestamp: annotation.timestamp,
+        fields,
+      };
+    }),
+    tags: !span.tags ? [] : Object.entries(span.tags).map(tag => ({
+      key: tag[0],
+      value: tag[1],
+    })),
+    references: !span.parentId ? [] : [{
+      refType: 'CHILD_OF',
+      traceID: span.traceId,
+      spanID: span.parentId,
+    }],
+  }));
+  traceData.processes = {};
+  trace.forEach(span => {
+    const localEndpoint = span.localEndpoint;
+    const name = localEndpoint.serviceName;
+    traceData.processes[name] = {
+      serviceName: name,
+      tags: [
+        {
+          key: 'hostname',
+          type: 'string',
+          value: name,
+        },
+        {
+          key: 'ip',
+          type: 'string',
+          value: localEndpoint.ipv4,
+        },
+      ],
+    };
+  });
+  return traceData;
+}
+
+function transformTracesData(traces: Array) {
+  // build a map of spanId -> traceId relationships
+  // const rels = {};
+  // traces.forEach(trace => {
+  //   trace.forEach(span => {
+  //     rels[span.id] = span.traceId;
+  //   });
+  // });
+
+  return traces.map(trace => transformTraceData(trace));
+}
+
+export const DEFAULT_API_ROOT = prefixUrl('/api/v2/');
 export const DEFAULT_DEPENDENCY_LOOKBACK = moment.duration(1, 'weeks').asMilliseconds();
+
+function tranformLookBack(lookback) {
+  const unit = lookback.substr(-1);
+  return moment.duration(parseInt(lookback, 10), unit).asMilliseconds();
+}
 
 const JaegerAPI = {
   apiRoot: DEFAULT_API_ROOT,
   fetchTrace(id) {
-    return getJSON(`${this.apiRoot}traces/${id}`);
+    const json = getJSON(`${this.apiRoot}trace/${id}`);
+    return json.then(d => ({
+      'data': [transformTraceData(d)],
+    }));
+  },
+  fetchTraces(ids) {
+    const traces = ids.traceID.map(id => {
+      return getJSON(`${this.apiRoot}trace/${id}`).then(d => transformTraceData(d));
+    });
+    return Promise.all(traces).then(result => ({ 'data': result }));
   },
   archiveTrace(id) {
     return getJSON(`${this.apiRoot}archive/${id}`, { method: 'POST' });
   },
   searchTraces(query) {
-    return getJSON(`${this.apiRoot}traces`, { query });
+    // transform to zipkin query
+    const zipkinQuery = {
+      spanName: query.operation,
+      minDuration: query.minDuration,
+      maxDuration: query.maxDuration,
+      endTs: query.end / 1000,
+      limit: query.limit,
+      annotationQuery: query.tags,
+    };
+    if (query.lookback) {
+      zipkinQuery.lookback = tranformLookBack(query.lookback);
+    }
+    if (query.service !== 'all') {
+      zipkinQuery.serviceName = query.service;
+    }
+    query = zipkinQuery;
+    const json = getJSON(`${this.apiRoot}traces`, { query });
+    return json.then(d => ({
+      'data': transformTracesData(d),
+    }));
   },
   fetchServices() {
-    return getJSON(`${this.apiRoot}services`);
+    const json = getJSON(`${this.apiRoot}services`);
+    return json.then(d => ({
+      'data': d,
+    }));
   },
   fetchServiceOperations(serviceName) {
-    return getJSON(`${this.apiRoot}services/${encodeURIComponent(serviceName)}/operations`);
+    const json = getJSON(`${this.apiRoot}spans?serviceName=${encodeURIComponent(serviceName)}`);
+    return json.then(d => ({
+      'data': d,
+    }));
   },
   fetchDependencies(endTs = new Date().getTime(), lookback = DEFAULT_DEPENDENCY_LOOKBACK) {
     return getJSON(`${this.apiRoot}dependencies`, { query: { endTs, lookback } });

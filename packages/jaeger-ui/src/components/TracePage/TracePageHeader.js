@@ -121,7 +121,7 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
     <Menu>
       <Menu.Item>
         <Link
-          to={prefixUrl(`/api/traces/${traceID}?prettyPrint=true`)}
+          to={prefixUrl(`/api/v2/trace/${traceID}?prettyPrint=true`)}
           rel="noopener noreferrer"
           target="_blank"
           onClick={trackAltViewOpen}
@@ -131,7 +131,7 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
       </Menu.Item>
       <Menu.Item>
         <Link
-          to={prefixUrl(`/api/traces/${traceID}?raw=true&prettyPrint=true`)}
+          to={prefixUrl(`/api/v2/trace/${traceID}?raw=true&prettyPrint=true`)}
           rel="noopener noreferrer"
           target="_blank"
           onClick={trackAltViewOpen}
