@@ -165,9 +165,24 @@ function transformTracesData(traces: Array) {
 export const DEFAULT_API_ROOT = prefixUrl('/api/v2/');
 export const DEFAULT_DEPENDENCY_LOOKBACK = moment.duration(1, 'weeks').asMilliseconds();
 
-function tranformLookBack(lookback) {
-  const unit = lookback.substr(-1);
-  return moment.duration(parseInt(lookback, 10), unit).asMilliseconds();
+function durationToMs(duration: string, nanos: boolean = false) {
+  if (!duration) {
+    return null;
+  }
+  const re = /([0-9]+)([a-z]+)/gmi;
+  const rs = re.exec(duration);
+  // [0]: 500us - matched
+  // [1]: 500   - value
+  // [2]: us    - unit
+  if (rs && rs.length === 3) {
+    const value = rs[1];
+    const unit = rs[2];
+    let ms = moment.duration(parseInt(value, 10), unit).asMilliseconds();
+    ms = nanos ? ms * 1000 : ms;
+    // zipkin api seems to have some trouble when duration is not positive
+    return ms > 0 ? ms : null;
+  }
+  return null;
 }
 
 const JaegerAPI = {
@@ -189,14 +204,14 @@ const JaegerAPI = {
     // transform to zipkin query
     const zipkinQuery = {
       spanName: query.operation,
-      minDuration: query.minDuration,
-      maxDuration: query.maxDuration,
+      minDuration: durationToMs(query.minDuration, true),
+      maxDuration: durationToMs(query.maxDuration, true),
       endTs: query.end / 1000,
       limit: query.limit,
       annotationQuery: query.tags,
     };
     if (query.lookback) {
-      zipkinQuery.lookback = tranformLookBack(query.lookback);
+      zipkinQuery.lookback = durationToMs(query.lookback);
     }
     if (query.service !== 'all') {
       zipkinQuery.serviceName = query.service;
