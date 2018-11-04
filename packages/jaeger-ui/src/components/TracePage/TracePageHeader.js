@@ -144,6 +144,11 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
 
   const overviewItems = [
     {
+      key: 'trace-id',
+      label: 'Trace ID:',
+      value: traceID,
+    },
+    {
       key: 'start',
       label: 'Trace Start:',
       value: formatDatetime(timestamp),
@@ -167,11 +172,6 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
       key: 'span-count',
       label: 'Total Spans:',
       value: numSpans,
-    },
-    {
-      key: 'trace-id',
-      label: 'Trace ID:',
-      value: traceID,
     },
   ];
 
