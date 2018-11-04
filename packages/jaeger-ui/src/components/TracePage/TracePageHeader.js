@@ -168,6 +168,11 @@ export function TracePageHeaderFn(props: TracePageHeaderProps) {
       label: 'Total Spans:',
       value: numSpans,
     },
+    {
+      key: 'trace-id',
+      label: 'Trace ID:',
+      value: traceID,
+    },
   ];
 
   return (
