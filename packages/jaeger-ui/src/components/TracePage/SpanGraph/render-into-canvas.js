@@ -65,8 +65,13 @@ export default function renderIntoCanvas(
 
     for (let j = 0; j < items[i].logs.length; j++) {
       const logValueOffset = items[i].logs[j].valueOffset;
-      const logX = logValueOffset / totalValueWidth * cWidth;
+      let logX = x + logValueOffset / totalValueWidth * cWidth;
       const logWidth = 10;
+      if (logX < x) {
+        logX = x;
+      } else if (logX + logWidth > x + width) {
+        logX = x + width - logWidth;
+      }
       ctx.fillStyle = LOG_FILL_STYLE;
       ctx.fillRect(logX, i * itemYChange, logWidth, itemHeight);
     }
