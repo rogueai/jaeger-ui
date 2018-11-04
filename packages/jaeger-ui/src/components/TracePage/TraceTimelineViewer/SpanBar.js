@@ -66,8 +66,8 @@ function SpanBar(props: SpanBarProps) {
       >
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
-      {logs && logs.length > 0 && (logs.map(l =>
-        (<div
+      {logs && logs.length > 0 && (logs.map((l, i) =>
+        (<div key={`log-${i}`}
           className="SpanBar--bar"
           style={{
             background: 'rgba(0, 0, 0, 0.2)',
@@ -97,5 +97,5 @@ export default compose(
     setLongLabel: () => setLabel(longLabel),
     setShortLabel: () => setLabel(shortLabel),
   })),
-  onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd', 'logs']),
+  onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd']),
 )(SpanBar);
