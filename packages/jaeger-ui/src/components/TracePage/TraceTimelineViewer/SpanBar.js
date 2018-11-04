@@ -26,6 +26,11 @@ type SpanBarProps = {
   onClick: (SyntheticMouseEvent<any>) => void,
   viewEnd: number,
   viewStart: number,
+  logs: {
+    viewStart: number,
+    viewEnd: number,
+    fields: ?Object[]
+  },
   rpc: {
     viewStart: number,
     viewEnd: number,
@@ -40,7 +45,7 @@ function toPercent(value: number) {
 }
 
 function SpanBar(props: SpanBarProps) {
-  const { viewEnd, viewStart, color, label, hintSide, onClick, setLongLabel, setShortLabel, rpc } = props;
+  const { viewEnd, viewStart, color, label, hintSide, onClick, setLongLabel, setShortLabel, rpc, logs } = props;
 
   return (
     <div
@@ -61,6 +66,17 @@ function SpanBar(props: SpanBarProps) {
       >
         <div className={`SpanBar--label is-${hintSide}`}>{label}</div>
       </div>
+      {logs && logs.length > 0 && (logs.map(l =>
+        (<div
+          className="SpanBar--bar"
+          style={{
+            background: 'rgba(0, 0, 0, 0.2)',
+            left: toPercent(l.viewStart),
+            width: '5px',
+          }}
+        />),
+      ))}
+
       {rpc && (
         <div
           className="SpanBar--rpc"
@@ -81,5 +97,5 @@ export default compose(
     setLongLabel: () => setLabel(longLabel),
     setShortLabel: () => setLabel(shortLabel),
   })),
-  onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd'])
+  onlyUpdateForKeys(['label', 'rpc', 'viewStart', 'viewEnd', 'logs']),
 )(SpanBar);

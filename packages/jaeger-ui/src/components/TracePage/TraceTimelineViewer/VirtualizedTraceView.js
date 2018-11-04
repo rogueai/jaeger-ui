@@ -76,7 +76,7 @@ const NUM_TICKS = 5;
 function generateRowStates(
   spans: ?(Span[]),
   childrenHiddenIDs: Set<string>,
-  detailStates: Map<string, ?DetailState>
+  detailStates: Map<string, ?DetailState>,
 ): RowState[] {
   if (!spans) {
     return [];
@@ -287,6 +287,21 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
       viewEnd: zoomEnd,
     });
 
+    const logs = !span.logs ? [] : span.logs.map(l => {
+      const logViewBounds = getViewedBounds({
+        min: trace.startTime,
+        max: trace.endTime,
+        start: l.timestamp,
+        end: l.timestamp + 1,
+        viewStart: zoomStart,
+        viewEnd: zoomEnd,
+      });
+      return {
+        viewStart: logViewBounds.start,
+        viewEnd: logViewBounds.end,
+      };
+    });
+
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
@@ -321,6 +336,7 @@ export class VirtualizedTraceViewImpl extends React.PureComponent<VirtualizedTra
           isDetailExpanded={isDetailExpanded}
           isMatchingFilter={isMatchingFilter}
           isParent={span.hasChildren}
+          logs={logs}
           numTicks={NUM_TICKS}
           onDetailToggled={detailToggle}
           onChildrenToggled={childrenToggle}

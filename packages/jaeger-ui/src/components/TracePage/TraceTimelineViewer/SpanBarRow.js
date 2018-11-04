@@ -46,6 +46,11 @@ type SpanBarRowProps = {
     operationName: string,
     serviceName: string,
   },
+  logs: ?{
+    viewStart: number,
+    viewEnd: number,
+    fields: ?Object[]
+  },
   serviceName: string,
   showErrorIcon: boolean,
   spanID: string,
@@ -88,6 +93,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
       isMatchingFilter,
       isParent,
       label,
+      logs,
       numTicks,
       operationName,
       rpc,
@@ -160,6 +166,7 @@ export default class SpanBarRow extends React.PureComponent<SpanBarRowProps> {
             rpc={rpc}
             viewStart={viewStart}
             viewEnd={viewEnd}
+            logs={logs}
             color={color}
             shortLabel={label}
             longLabel={longLabel}

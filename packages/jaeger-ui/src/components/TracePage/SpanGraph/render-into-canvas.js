@@ -22,11 +22,15 @@ export const MAX_TOTAL_HEIGHT = 200;
 export const MIN_ITEM_WIDTH = 10;
 export const MIN_TOTAL_HEIGHT = 60;
 
+const LOG_FILL_STYLE = `rgba(${[0, 0, 0]
+  .concat(0.2)
+  .join()})`;
+
 export default function renderIntoCanvas(
   canvas: HTMLCanvasElement,
-  items: { valueWidth: number, valueOffset: number, serviceName: string }[],
+  items: { valueWidth: number, valueOffset: number, serviceName: string, logs: { valueOffset: number, fields: number }[] }[],
   totalValueWidth: number,
-  getFillColor: string => [number, number, number]
+  getFillColor: string => [number, number, number],
 ) {
   const fillCache: Map<string, ?string> = new Map();
   const cHeight =
@@ -58,5 +62,13 @@ export default function renderIntoCanvas(
     }
     ctx.fillStyle = fillStyle;
     ctx.fillRect(x, i * itemYChange, width, itemHeight);
+
+    for (let j = 0; j < items[i].logs.length; j++) {
+      const logValueOffset = items[i].logs[j].valueOffset;
+      const logX = logValueOffset / totalValueWidth * cWidth;
+      const logWidth = 10;
+      ctx.fillStyle = LOG_FILL_STYLE;
+      ctx.fillRect(logX, i * itemYChange, logWidth, itemHeight);
+    }
   }
 }

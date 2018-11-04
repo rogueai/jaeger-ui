@@ -49,6 +49,10 @@ function getItem(span: Span) {
     valueOffset: span.relativeStartTime,
     valueWidth: span.duration,
     serviceName: span.process.serviceName,
+    logs: !span.logs ? [] : span.logs.map(l => ({
+      valueOffset: l.timestamp - span.startTime,
+      fields: l.fields ? l.fields.length : 0
+    }))
   };
 }
 
